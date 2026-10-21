@@ -346,13 +346,7 @@ Contributions to expand temple datasets, improve architectural 3D models, or enh
 
 ---
 
-## 📄 License
-
-Distributed under the **MIT License**. See `LICENSE` for more information.
-
----
-
-<div align="center">
-  <sub>Built with devotion & engineering rigor for Bharat's timeless heritage.</sub><br/>
-  <b>🕉️ Har Har Mahadev • Jai Shree Krishna • Jai Shree Ram 🕉️</b>
-</div>
+## Project done by:
+1.Shaik Towfeeq Rameez
+2.D.Ganesh
+3.K.Sapthagiri Reddy

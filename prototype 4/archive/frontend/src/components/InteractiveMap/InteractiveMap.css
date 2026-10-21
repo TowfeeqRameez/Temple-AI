@@ -1,0 +1,621 @@
+/* ============================================================
+   Interactive India Map – Temple Explorer
+   Design System & Complete Styles
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap');
+
+/* ── CSS Variables ── */
+:root {
+  --bg-cream: #FAF6EE;
+  --bg-overlay: rgba(47, 36, 29, 0.7);
+  --state-fill: #EFE3D1;
+  --state-fill-hover: #E2D3B8;
+  --state-stroke: #C89B3C;
+  --state-stroke-hover: #D97706;
+  --accent-warm: #D97706;
+  --accent-gold: #C89B3C;
+  --accent-deep: #7A1F2B;
+  --highlight-bronze: #B87333;
+  --text-dark: #2F241D;
+  --text-mid: #5A483E;
+  --text-light: #8A7A71;
+  --card-bg: #FAF6EE;
+
+  --shadow-soft: 0 6px 12px rgba(47, 36, 29, 0.15);
+  --shadow-card: 0 16px 40px rgba(47, 36, 29, 0.22);
+  --shadow-overlay: 0 24px 64px rgba(47, 36, 29, 0.35);
+  --shadow-temple: 0 0 40px rgba(200, 155, 60, 0.4);
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+
+  --transition-fast: 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  --transition-smooth: 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  --transition-spring: 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ── Reset ── */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100vh;
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg-cream);
+  color: var(--text-dark);
+  overflow-x: hidden;
+  /* Add subtle parchment grain */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23a)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+/* ── Main Section ── */
+.map-section {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  overflow: hidden;
+}
+
+/* ── Mandala Background ── */
+.mandala-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.12;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: slowParallax 30s ease-in-out infinite alternate;
+}
+
+@keyframes slowParallax {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+
+  100% {
+    transform: scale(1.05) translate(-1%, -1%);
+  }
+}
+
+.mandala-bg svg {
+  width: 140%;
+  height: 140%;
+  max-width: none;
+}
+
+/* ── Header ── */
+.map-header {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.map-header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 700;
+  color: var(--text-dark);
+  letter-spacing: -0.02em;
+}
+
+.map-header h1 .accent {
+  color: var(--accent-warm);
+}
+
+.map-header p {
+  font-size: 1rem;
+  color: var(--text-mid);
+  margin-top: 0.35rem;
+  font-weight: 300;
+  letter-spacing: 0.02em;
+}
+
+/* ── SVG Map Container ── */
+.map-container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 750px;
+  transition: var(--transition-smooth);
+}
+
+.map-container.dimmed {
+  opacity: 0.25;
+  filter: blur(3px);
+  pointer-events: none;
+}
+
+.map-container svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ── State Path Base ── */
+.state-path {
+  fill: var(--state-fill);
+  stroke: var(--state-stroke);
+  stroke-width: 0.8;
+  stroke-linejoin: round;
+  cursor: pointer;
+  transition:
+    transform var(--transition-fast),
+    filter var(--transition-fast),
+    fill var(--transition-fast);
+  transform-origin: center center;
+  transform-box: fill-box;
+}
+
+.state-path:hover,
+.state-path--hovered {
+  fill: var(--state-fill-hover);
+  transform: translateY(-2px);
+  filter: drop-shadow(var(--shadow-soft));
+  stroke: var(--state-stroke-hover);
+  stroke-width: 1.4;
+  position: relative;
+  z-index: 10;
+}
+
+/* ── State Name Label ── */
+.state-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 5px;
+  fill: var(--text-mid);
+  text-anchor: middle;
+  pointer-events: none;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+/* ── Hovered State Name Tooltip (floating) ── */
+.state-name-tooltip {
+  position: fixed;
+  z-index: 100;
+  padding: 6px 14px;
+  background: var(--text-dark);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.state-name-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================================
+   STATE OVERLAY  (the "lifted cut-out" panel)
+   ============================================================ */
+.state-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-overlay);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-smooth);
+}
+
+.state-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.state-overlay-inner {
+  position: relative;
+  width: 90%;
+  max-width: 620px;
+  max-height: 85vh;
+  background: var(--card-bg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23a)' opacity='0.04'/%3E%3C/svg%3E");
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-overlay);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: scale(0.92) translateY(20px);
+  transition: transform var(--transition-spring), opacity var(--transition-smooth);
+  overflow-y: auto;
+  border: 1px solid rgba(200, 155, 60, 0.2);
+}
+
+.state-overlay.active .state-overlay-inner {
+  transform: scale(1) translateY(0);
+}
+
+/* ── Overlay Header ── */
+.overlay-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.2rem;
+}
+
+.overlay-header h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.overlay-header h2 .temple-count {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--text-light);
+  margin-left: 0.5rem;
+}
+
+.btn-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1.5px solid var(--state-stroke);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-mid);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-back:hover {
+  background: var(--state-fill);
+  color: var(--text-dark);
+  border-color: var(--accent-warm);
+}
+
+.btn-back svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ── Overlay State SVG ── */
+.overlay-state-svg {
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  margin: 0.5rem 0 1rem;
+}
+
+.overlay-state-svg svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.overlay-state-shape {
+  fill: var(--state-fill-hover);
+  stroke: var(--accent-gold);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 8px 24px rgba(47, 36, 29, 0.15));
+}
+
+/* ── Temple Pins ── */
+.pins-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.temple-pin {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 5;
+  animation: pinFloat 3s ease-in-out infinite alternate;
+}
+
+@keyframes pinFloat {
+  0% {
+    transform: translate(-50%, -50%) translateY(0);
+  }
+
+  100% {
+    transform: translate(-50%, -50%) translateY(-4px);
+  }
+}
+
+.temple-pin-dot {
+  width: 14px;
+  height: 14px;
+  background: var(--accent-deep);
+  border: 2.5px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  transition: transform var(--transition-fast), background var(--transition-fast);
+}
+
+.temple-pin:hover .temple-pin-dot {
+  transform: translate(-50%, -50%) scale(1.3);
+  background: var(--accent-gold);
+  box-shadow: 0 4px 12px rgba(200, 155, 60, 0.6);
+}
+
+.temple-pin-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(200, 155, 60, 0.6) 0%, rgba(200, 155, 60, 0) 70%);
+  animation: pinPulse 2.5s ease-out infinite;
+}
+
+@keyframes pinPulse {
+  0% {
+    transform: translate(-50%, -50%) scale(0.7);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+/* ── Pin Tooltip ── */
+.pin-tooltip {
+  position: absolute;
+  z-index: 10;
+  padding: 8px 14px;
+  background: var(--text-dark);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+}
+
+.pin-tooltip.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.pin-tooltip .tip-name {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.pin-tooltip .tip-spec {
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ── Temple Card (on pin click) ── */
+.temple-card-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(30, 20, 10, 0.4);
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-fast);
+}
+
+.temple-card-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.temple-card {
+  background: linear-gradient(135deg, #FAF6EE 0%, #F5EADD 100%);
+  border: 4px solid #C89B3C;
+  box-shadow: 0 10px 40px rgba(122,31,43,0.2), inset 0 0 20px rgba(200,155,60,0.1);
+  transform: scale(0.95);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  max-width: 380px;
+  width: 90%;
+  box-shadow: var(--shadow-card);
+  transform: scale(0.9) translateY(20px);
+  transition: transform var(--transition-spring);
+  text-align: center;
+}
+
+.temple-card-overlay.active .temple-card {
+  transform: scale(1) translateY(0);
+}
+
+.temple-card .temple-icon {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 1.2rem;
+  background: linear-gradient(135deg, var(--accent-gold), var(--highlight-bronze));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 12px rgba(200, 155, 60, 0.3);
+}
+
+.temple-card h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--accent-deep);
+  margin-bottom: 0.4rem;
+}
+
+.temple-card .deity {
+  font-size: 0.88rem;
+  color: var(--text-mid);
+  margin-bottom: 1rem;
+  font-weight: 400;
+}
+
+.temple-card .chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 1.4rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 14px;
+  border-radius: 100px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  border: 1.5px solid var(--state-stroke);
+  color: var(--text-mid);
+  background: transparent;
+  transition: all var(--transition-fast);
+}
+
+.chip.visa {
+  border-color: rgba(200, 155, 60, 0.5);
+  color: var(--text-mid);
+}
+
+.chip.health {
+  border-color: rgba(122, 31, 43, 0.3);
+  color: var(--accent-deep);
+}
+
+.chip.house {
+  border-color: rgba(184, 115, 51, 0.4);
+  color: var(--highlight-bronze);
+}
+
+.chip.education {
+  border-color: rgba(47, 36, 29, 0.3);
+  color: var(--text-dark);
+}
+
+.chip.wealth {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+.btn-explore {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, var(--accent-deep), var(--text-dark));
+  color: #FAF6EE;
+  border: 1px solid rgba(250, 246, 238, 0.1);
+  border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 4px 16px rgba(122, 31, 43, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.btn-explore:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(122, 31, 43, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  background: linear-gradient(135deg, #8A2433, var(--text-dark));
+}
+
+.btn-close-card {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-mid);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.btn-close-card:hover {
+  background: rgba(0, 0, 0, 0.12);
+  color: var(--text-dark);
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .map-section {
+    padding: 1rem;
+  }
+
+  .map-header h1 {
+    font-size: 1.4rem;
+  }
+
+  .state-overlay-inner {
+    padding: 1.2rem;
+    max-height: 90vh;
+  }
+
+  .overlay-header h2 {
+    font-size: 1.15rem;
+  }
+
+  .temple-card {
+    padding: 1.4rem;
+  }
+}

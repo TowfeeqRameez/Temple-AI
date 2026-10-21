@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Temple Cloud Journey"
+description = "A cinematic, immersive webpage that carries visitors through the clouds toward a temple entrance and into its glowing inner sanctum, based on the supplied temple image."
+version = "1.0.0"
+id = "artifacts/temple-cloud-journey"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22606
+
+[services.development]
+run = "pnpm --filter @workspace/temple-cloud-journey run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/temple-cloud-journey", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/temple-cloud-journey/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22606"
+BASE_PATH = "/"

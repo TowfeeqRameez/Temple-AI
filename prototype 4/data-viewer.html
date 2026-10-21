@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TempleVerse — Backend Data Inspector</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0a0f;
+      --bg-card: rgba(18, 18, 28, 0.85);
+      --bg-card-hover: rgba(28, 28, 42, 0.95);
+      --border-gold: rgba(212, 175, 55, 0.25);
+      --gold-primary: #d4af37;
+      --gold-glow: #f3e5ab;
+      --gold-accent: #ffb703;
+      --text-main: #f5f5f7;
+      --text-muted: #9e9eb0;
+      --text-dim: #6b6b7f;
+      --badge-bg: rgba(212, 175, 55, 0.12);
+      --danger: #ef4444;
+      --success: #10b981;
+      --info: #3b82f6;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at 50% 0%, #171526 0%, #0a0a0f 65%);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    /* Header */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      border-radius: 14px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-title h1 {
+      font-family: 'Cinzel', serif;
+      font-size: 22px;
+      color: var(--gold-glow);
+      letter-spacing: 0.5px;
+    }
+    .db-status-pill {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .db-status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    .btn-gold {
+      background: linear-gradient(135deg, #d4af37, #aa820a);
+      color: #0a0a0f;
+      border: none;
+      font-weight: 600;
+    }
+    .btn-gold:hover {
+      background: linear-gradient(135deg, #f3e5ab, #d4af37);
+      transform: translateY(-1px);
+    }
+    .btn-outline {
+      background: transparent;
+      color: var(--gold-glow);
+      border: 1px solid var(--border-gold);
+    }
+    .btn-outline:hover {
+      background: rgba(212, 175, 55, 0.1);
+      border-color: var(--gold-primary);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      border-radius: 12px;
+      padding: 16px 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .stat-card:hover, .stat-card.active {
+      border-color: var(--gold-primary);
+      background: var(--bg-card-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(212, 175, 55, 0.15);
+    }
+    .stat-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .stat-val {
+      font-family: 'Cinzel', serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--gold-glow);
+    }
+    .stat-desc {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 4px;
+    }
+
+    /* Controls Bar */
+    .controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding: 12px 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      border-radius: 10px;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(10, 10, 15, 0.7);
+      border: 1px solid var(--border-gold);
+      border-radius: 8px;
+      padding: 6px 14px;
+      flex: 1;
+      max-width: 420px;
+    }
+    .search-box input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-main);
+      font-size: 13px;
+      width: 100%;
+    }
+    .search-box input::placeholder {
+      color: var(--text-dim);
+    }
+    .table-tabs {
+      display: flex;
+      gap: 8px;
+    }
+    .tab-btn {
+      padding: 6px 14px;
+      border-radius: 6px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover {
+      color: var(--gold-glow);
+    }
+    .tab-btn.active {
+      background: rgba(212, 175, 55, 0.15);
+      border-color: var(--gold-primary);
+      color: var(--gold-glow);
+    }
+
+    /* Data Table */
+    .table-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      border-radius: 12px;
+      overflow-x: auto;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+    thead {
+      background: rgba(25, 23, 38, 0.95);
+      border-bottom: 2px solid var(--border-gold);
+    }
+    th {
+      padding: 12px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--gold-primary);
+      white-space: nowrap;
+    }
+    tbody tr {
+      border-bottom: 1px solid rgba(212, 175, 55, 0.08);
+      transition: background 0.15s;
+    }
+    tbody tr:hover {
+      background: rgba(212, 175, 55, 0.04);
+    }
+    td {
+      padding: 12px 16px;
+      vertical-align: top;
+      color: var(--text-main);
+    }
+    .cell-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+    .cell-name {
+      font-weight: 600;
+      color: #fff;
+    }
+    .cell-state {
+      font-size: 12px;
+      color: var(--gold-glow);
+      white-space: nowrap;
+    }
+    .cell-deity {
+      color: #d1d5db;
+      max-width: 200px;
+    }
+    .cell-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      background: var(--badge-bg);
+      color: var(--gold-primary);
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      margin: 2px;
+    }
+    .cell-disease-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      background: rgba(59, 130, 246, 0.15);
+      color: #93c5fd;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      margin: 1px;
+    }
+    .cell-purpose {
+      max-width: 280px;
+      font-size: 12px;
+      color: #cbd5e1;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* Row Expand Modal / Details */
+    .row-detail-btn {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      background: rgba(212, 175, 55, 0.15);
+      color: var(--gold-glow);
+      border: 1px solid var(--border-gold);
+      cursor: pointer;
+    }
+    .row-detail-btn:hover {
+      background: var(--gold-primary);
+      color: #000;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal-card {
+      background: #11101d;
+      border: 1px solid var(--gold-primary);
+      border-radius: 14px;
+      max-width: 780px;
+      width: 100%;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+    }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-gold);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h3 {
+      font-family: 'Cinzel', serif;
+      color: var(--gold-glow);
+      font-size: 18px;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 22px;
+      cursor: pointer;
+    }
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #e2e8f0;
+      white-space: pre-wrap;
+      word-break: break-all;
+      background: #090812;
+      border-radius: 0 0 14px 14px;
+    }
+
+    /* API Link Card */
+    .api-endpoints-section {
+      margin-top: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-gold);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .api-endpoints-title {
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      color: var(--gold-glow);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .endpoint-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 10px;
+    }
+    .endpoint-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(10, 10, 15, 0.6);
+      border: 1px solid rgba(212, 175, 55, 0.15);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+    }
+    .endpoint-method {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      font-size: 10px;
+      margin-right: 8px;
+    }
+    .endpoint-path {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-main);
+      text-decoration: none;
+    }
+    .endpoint-path:hover {
+      color: var(--gold-glow);
+      text-decoration: underline;
+    }
+    .endpoint-link {
+      color: var(--gold-primary);
+      text-decoration: none;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <div class="header-bar">
+    <div class="header-title">
+      <span style="font-size: 26px;">🕉️</span>
+      <div>
+        <h1>TempleVerse — Backend Data Inspector</h1>
+        <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+          <span class="db-status-pill">
+            <span class="db-status-dot"></span> SQLite Connected (templeverse.db)
+          </span>
+          <span style="font-size: 11px; color: var(--text-dim); font-family: 'JetBrains Mono', monospace;">
+            Port: 5001 | WAL Mode
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline" onclick="exportCurrentTableJSON()">📥 Export JSON</button>
+      <button class="btn btn-outline" onclick="exportCurrentTableCSV()">📊 Export CSV</button>
+      <button class="btn btn-gold" onclick="loadCurrentTable()">🔄 Refresh Data</button>
+      <a href="/" class="btn btn-outline" target="_blank">🌐 Open Front-End App ↗</a>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card active" id="stat-temples" onclick="switchTable('temples')">
+      <div class="stat-label">🏛️ Shrines Database</div>
+      <div class="stat-val" id="count-temples">200</div>
+      <div class="stat-desc">Table: <code>temples</code> (North & South India)</div>
+    </div>
+    <div class="stat-card" id="stat-users" onclick="switchTable('users')">
+      <div class="stat-label">👤 Registered Devotees</div>
+      <div class="stat-val" id="count-users">2</div>
+      <div class="stat-desc">Table: <code>users</code></div>
+    </div>
+    <div class="stat-card" id="stat-prarthanas" onclick="switchTable('prarthanas')">
+      <div class="stat-label">🙏 Sacred Prarthanas</div>
+      <div class="stat-val" id="count-prarthanas">1</div>
+      <div class="stat-desc">Table: <code>prarthanas</code> (Prayer Vows)</div>
+    </div>
+    <div class="stat-card" id="stat-favorites" onclick="switchTable('favorites')">
+      <div class="stat-label">⭐ Saved Shrines</div>
+      <div class="stat-val" id="count-favorites">1</div>
+      <div class="stat-desc">Table: <code>favorites</code> (Bookmarks)</div>
+    </div>
+  </div>
+
+  <!-- Controls Bar -->
+  <div class="controls-bar">
+    <div class="table-tabs">
+      <button class="tab-btn active" id="tab-temples" onclick="switchTable('temples')">🏛️ Temples (200)</button>
+      <button class="tab-btn" id="tab-users" onclick="switchTable('users')">👤 Users</button>
+      <button class="tab-btn" id="tab-prarthanas" onclick="switchTable('prarthanas')">🙏 Prarthanas</button>
+      <button class="tab-btn" id="tab-favorites" onclick="switchTable('favorites')">⭐ Favorites</button>
+    </div>
+    <div class="search-box">
+      <span>🔍</span>
+      <input type="text" id="filter-input" placeholder="Search rows by name, deity, state, purpose..." oninput="handleFilterInput(this.value)">
+    </div>
+    <div id="row-counter" style="font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">
+      Showing 200 records
+    </div>
+  </div>
+
+  <!-- Table Container -->
+  <div class="table-container">
+    <table id="data-table">
+      <thead id="table-head">
+        <!-- Dynamically rendered -->
+      </thead>
+      <tbody id="table-body">
+        <!-- Dynamically rendered -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- REST API Endpoints Quick Reference -->
+  <div class="api-endpoints-section">
+    <div class="api-endpoints-title">
+      <span>📡</span> Backend REST API Endpoints & Direct Links
+    </div>
+    <div class="endpoint-list">
+      <div class="endpoint-item">
+        <div>
+          <span class="endpoint-method">GET</span>
+          <a class="endpoint-path" href="/api/health" target="_blank">/api/health</a>
+        </div>
+        <a class="endpoint-link" href="/api/health" target="_blank">Test ↗</a>
+      </div>
+      <div class="endpoint-item">
+        <div>
+          <span class="endpoint-method">GET</span>
+          <a class="endpoint-path" href="/api/temples" target="_blank">/api/temples</a>
+        </div>
+        <a class="endpoint-link" href="/api/temples" target="_blank">All 200 Temples ↗</a>
+      </div>
+      <div class="endpoint-item">
+        <div>
+          <span class="endpoint-method">GET</span>
+          <a class="endpoint-path" href="/api/temples/summary" target="_blank">/api/temples/summary</a>
+        </div>
+        <a class="endpoint-link" href="/api/temples/summary" target="_blank">By State ↗</a>
+      </div>
+      <div class="endpoint-item">
+        <div>
+          <span class="endpoint-method">GET</span>
+          <a class="endpoint-path" href="/api/temples?q=visa" target="_blank">/api/temples?q=visa</a>
+        </div>
+        <a class="endpoint-link" href="/api/temples?q=visa" target="_blank">Query Visa ↗</a>
+      </div>
+      <div class="endpoint-item">
+        <div>
+          <span class="endpoint-method">GET</span>
+          <a class="endpoint-path" href="/api/temples?q=skin" target="_blank">/api/temples?q=skin</a>
+        </div>
+        <a class="endpoint-link" href="/api/temples?q=skin" target="_blank">Query Skin ↗</a>
+      </div>
+      <div class="endpoint-item">
+        <div>
+          <span class="endpoint-method">GET</span>
+          <a class="endpoint-path" href="/api/database/tables" target="_blank">/api/database/tables</a>
+        </div>
+        <a class="endpoint-link" href="/api/database/tables" target="_blank">DB Schema Stats ↗</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row Inspector Modal -->
+  <div class="modal-backdrop" id="modal-backdrop" onclick="closeModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="modal-title">Record Details</h3>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <pre class="modal-body" id="modal-body"></pre>
+    </div>
+  </div>
+
+  <script>
+    let currentTable = 'temples';
+    let currentData = [];
+    let filteredData = [];
+
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/database/tables');
+        const data = await res.json();
+        if (data.counts) {
+          document.getElementById('count-temples').textContent = data.counts.temples || 0;
+          document.getElementById('count-users').textContent = data.counts.users || 0;
+          document.getElementById('count-prarthanas').textContent = data.counts.prarthanas || 0;
+          document.getElementById('count-favorites').textContent = data.counts.favorites || 0;
+        }
+      } catch (e) {
+        console.error('Failed to load DB stats', e);
+      }
+    }
+
+    async function switchTable(tableName) {
+      currentTable = tableName;
+      
+      // Update UI tabs and stat cards
+      ['temples', 'users', 'prarthanas', 'favorites'].forEach(t => {
+        const tab = document.getElementById(`tab-${t}`);
+        const stat = document.getElementById(`stat-${t}`);
+        if (tab) tab.classList.toggle('active', t === tableName);
+        if (stat) stat.classList.toggle('active', t === tableName);
+      });
+
+      document.getElementById('filter-input').value = '';
+      await loadCurrentTable();
+    }
+
+    async function loadCurrentTable() {
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 40px; color: var(--gold-glow);">⏳ Fetching data from SQLite backend...</td></tr>';
+
+      try {
+        let res = await fetch(`/api/database/table/${currentTable}?limit=500`);
+        let json = await res.json();
+        
+        // Robust fallback for temples if table endpoint ever differs
+        if ((!json || !json.success || !json.rows) && currentTable === 'temples') {
+          const fbRes = await fetch('/api/temples?limit=500');
+          const fbJson = await fbRes.json();
+          if (fbJson && fbJson.data) {
+            json = { success: true, rows: fbJson.data };
+          }
+        }
+
+        if (json.success && json.rows) {
+          currentData = json.rows;
+          filteredData = currentData;
+          renderTable();
+        } else {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color: var(--danger); padding: 20px;">Failed to load table: ${json.message || 'Unknown error'}</td></tr>`;
+        }
+      } catch (err) {
+        if (currentTable === 'temples') {
+          try {
+            const fbRes = await fetch('/api/temples?limit=500');
+            const fbJson = await fbRes.json();
+            if (fbJson && fbJson.data) {
+              currentData = fbJson.data;
+              filteredData = currentData;
+              renderTable();
+              return;
+            }
+          } catch (e2) {}
+        }
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color: var(--danger); padding: 20px;">Error connecting to backend: ${err.message}</td></tr>`;
+      }
+    }
+
+    function handleFilterInput(query) {
+      const q = (query || '').toLowerCase().trim();
+      if (!q) {
+        filteredData = currentData;
+      } else {
+        filteredData = currentData.filter(row => {
+          return Object.values(row).some(val => {
+            if (val === null || val === undefined) return false;
+            return String(val).toLowerCase().includes(q);
+          });
+        });
+      }
+      renderTable();
+    }
+
+    function renderTable() {
+      const thead = document.getElementById('table-head');
+      const tbody = document.getElementById('table-body');
+      const counter = document.getElementById('row-counter');
+      counter.textContent = `Showing ${filteredData.length} of ${currentData.length} records`;
+
+      if (filteredData.length === 0) {
+        thead.innerHTML = '';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 40px; color: var(--text-dim);">No matching records found in this table.</td></tr>';
+        return;
+      }
+
+      if (currentTable === 'temples') {
+        thead.innerHTML = `
+          <tr>
+            <th>ID</th>
+            <th>Temple Name</th>
+            <th>State</th>
+            <th>Presiding Deity</th>
+            <th>Problem Theme & Purpose</th>
+            <th>Specific Diseases</th>
+            <th>Circuits</th>
+            <th>Action</th>
+          </tr>
+        `;
+        tbody.innerHTML = filteredData.map((t, idx) => {
+          let diseases = [];
+          try { diseases = JSON.parse(t.specific_diseases || '[]'); } catch(e) {}
+          let circuits = [];
+          try { circuits = JSON.parse(t.circuit_tags || '[]'); } catch(e) {}
+
+          return `
+            <tr>
+              <td class="cell-id">${t.id}</td>
+              <td class="cell-name">${t.name}</td>
+              <td class="cell-state">${t.state_id}</td>
+              <td class="cell-deity">${t.deity || '—'}</td>
+              <td class="cell-purpose">${t.problem_theme || 'Traditional devotion & blessings'}</td>
+              <td>${diseases.length ? diseases.map(d => `<span class="cell-disease-badge">${d}</span>`).join('') : '<span style="color:var(--text-dim);font-size:11px;">None</span>'}</td>
+              <td>${circuits.map(c => `<span class="cell-badge">${c}</span>`).join('')}</td>
+              <td>
+                <button class="row-detail-btn" onclick="openModal(${idx})">Inspect</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } else if (currentTable === 'users') {
+        thead.innerHTML = `
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>State Preference</th>
+            <th>Avatar</th>
+            <th>Registered At</th>
+            <th>Action</th>
+          </tr>
+        `;
+        tbody.innerHTML = filteredData.map((u, idx) => `
+          <tr>
+            <td class="cell-id">#${u.id}</td>
+            <td class="cell-name">${u.name}</td>
+            <td>${u.email}</td>
+            <td>${u.state || 'All India'}</td>
+            <td>${u.avatar || '🕉️'}</td>
+            <td class="cell-id">${u.created_at || '—'}</td>
+            <td><button class="row-detail-btn" onclick="openModal(${idx})">Inspect</button></td>
+          </tr>
+        `).join('');
+      } else if (currentTable === 'prarthanas') {
+        thead.innerHTML = `
+          <tr>
+            <th>ID</th>
+            <th>Devotee Name</th>
+            <th>Target Temple</th>
+            <th>Vow Category</th>
+            <th>Prayer Text</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Action</th>
+          </tr>
+        `;
+        tbody.innerHTML = filteredData.map((p, idx) => `
+          <tr>
+            <td class="cell-id">#${p.id}</td>
+            <td class="cell-name">${p.devotee_name || 'Anonymous'}</td>
+            <td>${p.temple_name || 'General'}</td>
+            <td><span class="cell-badge">${p.vow_category || 'Prayer'}</span></td>
+            <td class="cell-purpose">${p.prayer_text}</td>
+            <td><span style="color: var(--success); font-size:11px;">${p.status}</span></td>
+            <td class="cell-id">${p.created_at || '—'}</td>
+            <td><button class="row-detail-btn" onclick="openModal(${idx})">Inspect</button></td>
+          </tr>
+        `).join('');
+      } else if (currentTable === 'favorites') {
+        thead.innerHTML = `
+          <tr>
+            <th>ID</th>
+            <th>User ID</th>
+            <th>Temple ID</th>
+            <th>Temple Name</th>
+            <th>State</th>
+            <th>Created At</th>
+            <th>Action</th>
+          </tr>
+        `;
+        tbody.innerHTML = filteredData.map((f, idx) => `
+          <tr>
+            <td class="cell-id">#${f.id}</td>
+            <td>Devotee #${f.user_id}</td>
+            <td class="cell-id">${f.temple_id}</td>
+            <td class="cell-name">${f.temple_name}</td>
+            <td>${f.state_id || '—'}</td>
+            <td class="cell-id">${f.created_at || '—'}</td>
+            <td><button class="row-detail-btn" onclick="openModal(${idx})">Inspect</button></td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    function openModal(idx) {
+      const item = filteredData[idx];
+      document.getElementById('modal-title').textContent = item.name || `${currentTable.toUpperCase()} Record #${item.id}`;
+      document.getElementById('modal-body').textContent = JSON.stringify(item, null, 2);
+      document.getElementById('modal-backdrop').classList.add('open');
+    }
+
+    function closeModal(e) {
+      if (!e || e.target.id === 'modal-backdrop' || e.target.classList.contains('modal-close')) {
+        document.getElementById('modal-backdrop').classList.remove('open');
+      }
+    }
+
+    function exportCurrentTableJSON() {
+      const blob = new Blob([JSON.stringify(filteredData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${currentTable}_export.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportCurrentTableCSV() {
+      if (!filteredData.length) return alert('No data to export!');
+      const keys = Object.keys(filteredData[0]);
+      const header = keys.join(',');
+      const rows = filteredData.map(r => {
+        return keys.map(k => {
+          let val = r[k] === null || r[k] === undefined ? '' : String(r[k]);
+          val = val.replace(/"/g, '""');
+          return `"${val}"`;
+        }).join(',');
+      });
+      const csv = [header, ...rows].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${currentTable}_export.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Initialize on load
+    loadStats();
+    loadCurrentTable();
+  </script>
+</body>
+</html>

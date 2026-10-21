@@ -1,0 +1,37 @@
+@keyframes slideMarquee {
+    0% {
+        transform: translateX(calc(-50% - 1rem));
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
+.carousel-container:hover .carousel-track {
+    animation-play-state: paused;
+}
+
+.carousel-track {
+    will-change: transform;
+    animation: slideMarquee 10s linear infinite;
+}
+
+.carousel-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.carousel-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(200, 155, 60, 0.1), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+}
+
+.carousel-card:hover::before {
+    opacity: 1;
+}

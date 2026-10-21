@@ -30,3 +30,7 @@ build/
 
 # Local project archive
 TempleVerse-Project.zip
+
+# Research papers and local PDF drafts
+IEEE_TEMPLEVERSE_RESEARCH_PAPER.*
+*.pdf

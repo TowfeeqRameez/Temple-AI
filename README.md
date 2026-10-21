@@ -347,6 +347,6 @@ Contributions to expand temple datasets, improve architectural 3D models, or enh
 ---
 
 ## Project done by:
-1.Shaik Towfeeq Rameez\n
-2.D.Ganesh\n
-3.K.Sapthagiri Reddy\n
+1.Shaik Towfeeq Rameez
+2.D.Ganesh
+3.K.Sapthagiri Reddy

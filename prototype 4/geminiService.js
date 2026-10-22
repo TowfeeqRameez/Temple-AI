@@ -103,7 +103,27 @@ class TempleVerseGeminiService {
       }
     }
 
-    // Always deliver an accurate, tailored grounded answer from the verified 200-temple dataset
+    // Tier 2 Fallback: If Gemini fails or key is missing, check if Groq Meta Llama 3.3 70B is available
+    const groqKey = (typeof window !== 'undefined' && window.templeVerseGroq?.getGroqApiKey?.()) ||
+      (typeof localStorage !== 'undefined' ? localStorage.getItem('groq_api_key') : '') ||
+      (typeof window !== 'undefined' && window.TEMPLEVERSE_CONFIG?.groq?.apiKey) ||
+      (typeof process !== 'undefined' && process.env?.GROQ_API_KEY) || '';
+
+    if (groqKey && groqKey.trim().startsWith('gsk_') && typeof fetch === 'function') {
+      try {
+        const groqAnswer = await this.callGroqFallback(userQuestion, context, systemPrompt, groqKey.trim());
+        if (groqAnswer && groqAnswer.trim().length > 20) {
+          console.info("[TempleVerse] Gemini unavailable; successfully generated text response via Groq Meta Llama 3.3 70B.");
+          this.conversationHistory.push({ role: 'user', text: userQuestion });
+          this.conversationHistory.push({ role: 'model', text: groqAnswer });
+          return groqAnswer;
+        }
+      } catch (groqErr) {
+        console.warn("[TempleVerse Gemini] Groq fallback attempt failed, falling back to local grounded intelligence:", groqErr);
+      }
+    }
+
+    // Tier 3 Fallback: Always deliver an accurate, tailored grounded answer from the verified 200-temple dataset
     const answer = this.generateLocalGroundedAnswer(userQuestion, activeTemple, lastError);
 
     // Record in conversation history
@@ -111,6 +131,38 @@ class TempleVerseGeminiService {
     this.conversationHistory.push({ role: 'model', text: answer });
 
     return answer;
+  }
+
+  /**
+   * Calls Groq Meta Llama 3.3 70B REST API as a resilient high-speed text fallback
+   */
+  async callGroqFallback(userQuestion, context, systemPrompt, groqKey) {
+    const url = "https://api.groq.com/openai/v1/chat/completions";
+    const messages = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: `=== VERIFIED ALL-INDIA TEMPLEVERSE GROUNDING CONTEXT ===\n${context}\n\n=== DEVOTEE QUESTION ===\n${userQuestion}\n\nAnswer the devotee's specific question accurately and respectfully based strictly on the verified heritage dataset above.` }
+    ];
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${groqKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: messages,
+        temperature: 0.35,
+        max_tokens: 1200
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Groq API returned HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || null;
   }
 
   /**

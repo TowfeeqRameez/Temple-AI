@@ -3,9 +3,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "services": {
     "temple_frontend": {
-      "root": "temple-cloud-journey-project/artifacts/temple-cloud-journey",
-      "framework": "vite"
-    },
+  "root": "temple-cloud-journey-project/artifacts/temple-cloud-journey",
+  "framework": "vite",
+  "outputDirectory": "dist/public"
+},
     "temple_api": {
       "root": "temple-cloud-journey-project/artifacts/api-server",
       "framework": "express"

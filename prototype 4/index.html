@@ -2508,26 +2508,116 @@
 
         <div class="theory-card">
           <div class="card-icon">📐</div>
-          <h4>Grad-CAM Mathematical Formulation</h4>
-          <p class="theory-desc">Gradient-weighted Class Activation Mapping computes neuron importance weights by taking the gradient of score $y^c$ for class $c$ with respect to feature activation map $A^k$ of a convolutional layer:</p>
-          <div class="math-block">
-            $$\alpha_k^c = \frac{1}{Z} \sum_{i} \sum_{j} \frac{\partial y^c}{\partial A_{i,j}^k}$$
+          <h4>Grad-CAM (Gradient-Weighted Class Activation Mapping)</h4>
+          <p class="theory-desc">Gradient-weighted Class Activation Mapping calculates neuron importance weights by computing the partial derivative of the class prediction score <span class="math-var">Y<sup>c</sup></span> with respect to the convolutional feature activation map <span class="math-var">A<sup>k</sup></span>:</p>
+          
+          <div class="math-formula-box">
+            <div class="formula-line">
+              <span class="math-var">&alpha;<sub>k</sub><sup>c</sup></span>
+              <span class="math-op">=</span>
+              <div class="math-fraction">
+                <span class="numerator">1</span>
+                <span class="denominator">Z</span>
+              </div>
+              <span class="math-symbol">&sum;</span><sub>i=1</sub><sup>u</sup>
+              <span class="math-symbol">&sum;</span><sub>j=1</sub><sup>v</sup>
+              <div class="math-fraction">
+                <span class="numerator">&part;Y<sup>c</sup></span>
+                <span class="denominator">&part;A<sub>i,j</sub><sup>k</sup></span>
+              </div>
+            </div>
+            <div class="formula-vars-legend">
+              <span><strong>Z = u &times; v:</strong> Spatial resolution</span>
+              <span><strong>Y<sup>c</sup>:</strong> Class score</span>
+              <span><strong>A<sub>i,j</sub><sup>k</sup>:</strong> Feature activation at (i, j)</span>
+            </div>
           </div>
-          <p class="theory-desc">The coarse class-discriminative saliency map $L_{\text{Grad-CAM}}^c$ is computed as a weighted linear combination of forward activation maps followed by a rectified linear unit (ReLU):</p>
-          <div class="math-block">
-            $$L_{\text{Grad-CAM}}^c = \text{ReLU}\left( \sum_{k} \alpha_k^c A^k \right)$$
+
+          <p class="theory-desc">The final class-discriminative localization heatmap <span class="math-var">L<sub>Grad-CAM</sub><sup>c</sup></span> is computed as a weighted linear combination of forward activation maps followed by a Rectified Linear Unit (ReLU):</p>
+          
+          <div class="math-formula-box">
+            <div class="formula-line">
+              <span class="math-var">L<sub>Grad-CAM</sub><sup>c</sup></span>
+              <span class="math-op">=</span>
+              <span class="math-func">ReLU</span>
+              <span class="math-bracket">(</span>
+              <span class="math-symbol">&sum;</span><sub>k</sub>
+              <span class="math-var">&alpha;<sub>k</sub><sup>c</sup></span>
+              <span class="math-var">A<sup>k</sup></span>
+              <span class="math-bracket">)</span>
+            </div>
           </div>
-          <p class="theory-note">The ReLU ensures only positive gradients (features that positively contribute to classifying the temple archetype) are visualized, filtering out background noise.</p>
+
+          <p class="theory-note">The ReLU activation ensures only positive gradients (visual features that actively confirm the temple architectural class) are highlighted, suppressing background noise.</p>
         </div>
 
         <div class="theory-card">
           <div class="card-icon">🔬</div>
-          <h4>Grad-CAM++ Higher-Order Pixel Weighting</h4>
-          <p class="theory-desc">For intricate temple carvings where architectural motifs repeat at multiple scales (e.g. mini-spires or urushringas), Grad-CAM++ incorporates second and third-order partial derivatives:</p>
-          <div class="math-block">
-            $$w_k^c = \sum_{i} \sum_{j} \alpha_{i,j}^{k,c} \cdot \text{ReLU}\left( \frac{\partial y^c}{\partial A_{i,j}^k} \right)$$
+          <h4>Grad-CAM++ (Higher-Order Pixel-Wise Saliency)</h4>
+          <p class="theory-desc">For intricate temple architectures where multiple motifs co-occur (e.g., repeating miniature spires, urushringas, or multiple gopurams), Grad-CAM++ incorporates pixel-wise spatial weighting using second and third-order partial derivatives:</p>
+          
+          <div class="math-formula-box">
+            <div class="formula-line">
+              <span class="math-var">w<sub>k</sub><sup>c</sup></span>
+              <span class="math-op">=</span>
+              <span class="math-symbol">&sum;</span><sub>i=1</sub><sup>u</sup>
+              <span class="math-symbol">&sum;</span><sub>j=1</sub><sup>v</sup>
+              <span class="math-var">&alpha;<sub>i,j</sub><sup>k,c</sup></span>
+              <span class="math-op">&middot;</span>
+              <span class="math-func">ReLU</span>
+              <span class="math-bracket">(</span>
+              <div class="math-fraction">
+                <span class="numerator">&part;Y<sup>c</sup></span>
+                <span class="denominator">&part;A<sub>i,j</sub><sup>k</sup></span>
+              </div>
+              <span class="math-bracket">)</span>
+            </div>
           </div>
-          <p class="theory-note">Grad-CAM++ provides superior localization when multiple distinct towers or ornate gopurams are present in a single wide-angle panorama.</p>
+
+          <p class="theory-desc">The spatial weight coefficients <span class="math-var">&alpha;<sub>i,j</sub><sup>k,c</sup></span> are analytically computed via higher-order gradients:</p>
+
+          <div class="math-formula-box">
+            <div class="formula-line">
+              <span class="math-var">&alpha;<sub>i,j</sub><sup>k,c</sup></span>
+              <span class="math-op">=</span>
+              <div class="math-fraction">
+                <span class="numerator">
+                  <div class="math-fraction" style="font-size: 0.85em;">
+                    <span class="numerator">&part;<sup>2</sup>Y<sup>c</sup></span>
+                    <span class="denominator">(&part;A<sub>i,j</sub><sup>k</sup>)<sup>2</sup></span>
+                  </div>
+                </span>
+                <span class="denominator" style="font-size: 0.85em;">
+                  2
+                  <div class="math-fraction" style="font-size: 0.85em;">
+                    <span class="numerator">&part;<sup>2</sup>Y<sup>c</sup></span>
+                    <span class="denominator">(&part;A<sub>i,j</sub><sup>k</sup>)<sup>2</sup></span>
+                  </div>
+                  <span class="math-op">+</span>
+                  <span class="math-symbol">&sum;</span><sub>a,b</sub> <span class="math-var">A<sub>a,b</sub><sup>k</sup></span>
+                  <div class="math-fraction" style="font-size: 0.85em;">
+                    <span class="numerator">&part;<sup>3</sup>Y<sup>c</sup></span>
+                    <span class="denominator">(&part;A<sub>a,b</sub><sup>k</sup>)<sup>3</sup></span>
+                  </div>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="math-formula-box">
+            <div class="formula-line">
+              <span class="math-var">L<sub>Grad-CAM++</sub><sup>c</sup></span>
+              <span class="math-op">=</span>
+              <span class="math-func">ReLU</span>
+              <span class="math-bracket">(</span>
+              <span class="math-symbol">&sum;</span><sub>k</sub>
+              <span class="math-var">w<sub>k</sub><sup>c</sup></span>
+              <span class="math-var">A<sup>k</sup></span>
+              <span class="math-bracket">)</span>
+            </div>
+          </div>
+
+          <p class="theory-note">Grad-CAM++ provides superior spatial localization and multi-instance recognition when multiple architectural spires or pillared corridors exist in a single panorama.</p>
         </div>
 
         <div class="theory-card full-width">
@@ -2545,7 +2635,7 @@
             <div class="col-side">
               <h5>Vision Transformers (ViT-Base/16)</h5>
               <ul>
-                <li><strong>Global Receptive Field:</strong> Patch projection ($16\times16$) establishes instantaneous global attention between the ground plinth and apex kalasha.</li>
+                <li><strong>Global Receptive Field:</strong> Patch projection (16 &times; 16) establishes instantaneous global attention between the ground plinth and apex kalasha.</li>
                 <li><strong>Absence of Spatial Inductive Bias:</strong> Requires massive training datasets but captures holistic spatial proportions and complex hybrid mandapa arrangements.</li>
                 <li><strong>Higher Compute Cost:</strong> Requires 17.6 GFLOPs per forward pass (3.9x higher than EfficientNet).</li>
               </ul>

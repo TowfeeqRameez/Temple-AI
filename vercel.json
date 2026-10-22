@@ -1,0 +1,28 @@
+
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "temple_frontend": {
+      "root": "temple-cloud-journey-project/artifacts/temple-cloud-journey",
+      "framework": "vite"
+    },
+    "temple_api": {
+      "root": "temple-cloud-journey-project/artifacts/api-server",
+      "framework": "express"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "temple_api"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "temple_frontend"
+      }
+    }
+  ]
+}
